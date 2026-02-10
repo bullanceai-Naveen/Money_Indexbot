@@ -55,7 +55,8 @@ exports.handler = async (event) => {
                 return error('An account with this email already exists', 409);
             }
 
-            return error('Failed to create account. Please try again.');
+            // Temporary debug info - remove in production
+            return error(`Account creation failed: ${authError.message || JSON.stringify(authError)}`, 500);
         }
 
         // Update profile with additional info
@@ -94,6 +95,6 @@ exports.handler = async (event) => {
 
     } catch (err) {
         console.error('Registration error:', err);
-        return serverError('Registration failed. Please try again later.');
+        return serverError(`Registration failed: ${err.message || JSON.stringify(err)}`);
     }
 };
