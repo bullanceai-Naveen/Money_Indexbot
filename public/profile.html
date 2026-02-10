@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - MoneyIndex</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="loading-spinner"></div>
+        <p>Loading profile...</p>
+    </div>
+
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/dashboard.html" class="logo">
+                <span class="logo-icon">📊</span>
+                <span class="logo-text">MoneyIndex</span>
+            </a>
+            <div class="nav-links">
+                <a href="/dashboard.html">Dashboard</a>
+                <a href="/profile.html" class="active">Profile</a>
+                <span id="admin-link"></span>
+                <button onclick="auth.logout()" class="btn btn-outline btn-sm">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <main id="profile-content" class="profile-page" style="display: none;">
+        <div class="page-header">
+            <h1>Your Profile</h1>
+        </div>
+
+        <div class="profile-grid">
+            <!-- Account Information -->
+            <section class="profile-card">
+                <h2>Account Information</h2>
+                <form id="profile-form">
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" disabled>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="full_name">Full Name</label>
+                        <input type="text" id="full_name" placeholder="Your name">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="phone">Phone</label>
+                        <input type="tel" id="phone" placeholder="9876543210" pattern="[6-9][0-9]{9}">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="telegram_chat_id">
+                            Telegram Chat ID
+                            <span class="tooltip" title="Get this by messaging @userinfobot on Telegram">ℹ️</span>
+                        </label>
+                        <input type="text" id="telegram_chat_id" placeholder="123456789">
+                        <small class="form-hint">
+                            To receive daily tokens, message
+                            <a href="https://t.me/userinfobot" target="_blank" rel="noopener">@userinfobot</a>
+                            on Telegram to get your Chat ID
+                        </small>
+                    </div>
+
+                    <div id="form-message" class="form-message" style="display: none;"></div>
+
+                    <button type="submit" class="btn btn-primary" id="save-btn">
+                        Save Changes
+                    </button>
+                </form>
+            </section>
+
+            <!-- Subscription -->
+            <section class="profile-card">
+                <h2>Subscription</h2>
+                <div class="subscription-details">
+                    <div class="sub-row">
+                        <span class="sub-label">Status:</span>
+                        <span id="sub-status" class="sub-value"></span>
+                    </div>
+                    <div class="sub-row">
+                        <span class="sub-label">Started:</span>
+                        <span id="sub-start" class="sub-value">--</span>
+                    </div>
+                    <div class="sub-row">
+                        <span class="sub-label">Expires:</span>
+                        <span id="sub-end" class="sub-value">--</span>
+                    </div>
+                    <div class="sub-row">
+                        <span class="sub-label">Days Left:</span>
+                        <span id="sub-days" class="sub-value">--</span>
+                    </div>
+                </div>
+
+                <div id="renew-section" style="display: none; margin-top: 20px;">
+                    <a href="/pricing.html" class="btn btn-primary btn-block">Renew Subscription</a>
+                </div>
+            </section>
+
+            <!-- Payment History -->
+            <section class="profile-card">
+                <h2>Payment History</h2>
+                <div id="payment-history">
+                    <p class="no-data">Loading...</p>
+                </div>
+            </section>
+
+            <!-- Account Actions -->
+            <section class="profile-card">
+                <h2>Account</h2>
+                <div class="account-actions">
+                    <p>Member since: <span id="member-since">--</span></p>
+                    <button onclick="auth.logout()" class="btn btn-outline btn-block">
+                        Logout
+                    </button>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <script src="/js/config.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/api.js"></script>
+    <script>
+        async function initProfile() {
+            const allowed = await auth.requireAuth();
+            if (!allowed) return;
+
+            // Hide loading
+            document.getElementById('loading-overlay').style.display = 'none';
+            document.getElementById('profile-content').style.display = 'block';
+
+            // Admin link
+            if (auth.isAdmin()) {
+                document.getElementById('admin-link').innerHTML = '<a href="/admin.html">Admin</a>';
+            }
+
+            // Load profile data
+            await loadProfileData();
+
+            // Form submission
+            document.getElementById('profile-form').addEventListener('submit', handleProfileUpdate);
+        }
+
+        async function loadProfileData() {
+            try {
+                const response = await api.getProfile();
+                const { profile, payments, subscription } = response;
+
+                // Populate form
+                document.getElementById('email').value = profile.email || '';
+                document.getElementById('full_name').value = profile.full_name || '';
+                document.getElementById('phone').value = profile.phone || '';
+                document.getElementById('telegram_chat_id').value = profile.telegram_chat_id || '';
+
+                // Subscription info
+                const subInfo = auth.getSubscriptionInfo();
+                document.getElementById('sub-status').innerHTML =
+                    `<span class="status-badge ${subInfo.statusClass}">${subInfo.status}</span>`;
+                document.getElementById('sub-start').textContent =
+                    profile.subscription_start ? new Date(profile.subscription_start).toLocaleDateString('en-IN') : '--';
+                document.getElementById('sub-end').textContent =
+                    profile.subscription_end ? new Date(profile.subscription_end).toLocaleDateString('en-IN') : '--';
+                document.getElementById('sub-days').textContent =
+                    subInfo.daysLeft > 0 ? `${subInfo.daysLeft} days` : '--';
+
+                // Show renew button if not active
+                if (!subscription.is_active) {
+                    document.getElementById('renew-section').style.display = 'block';
+                }
+
+                // Member since
+                document.getElementById('member-since').textContent =
+                    profile.created_at ? new Date(profile.created_at).toLocaleDateString('en-IN') : '--';
+
+                // Payment history
+                renderPaymentHistory(payments);
+
+            } catch (err) {
+                console.error('Profile load error:', err);
+                showMessage('Failed to load profile data', 'error');
+            }
+        }
+
+        function renderPaymentHistory(payments) {
+            const container = document.getElementById('payment-history');
+
+            if (!payments || payments.length === 0) {
+                container.innerHTML = '<p class="no-data">No payment history</p>';
+                return;
+            }
+
+            const html = `
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${payments.map(p => `
+                            <tr>
+                                <td>${new Date(p.created_at).toLocaleDateString('en-IN')}</td>
+                                <td>₹${(p.amount / 100).toFixed(2)}</td>
+                                <td><span class="status-badge ${p.status}">${p.status}</span></td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        async function handleProfileUpdate(e) {
+            e.preventDefault();
+
+            const saveBtn = document.getElementById('save-btn');
+            saveBtn.disabled = true;
+            saveBtn.textContent = 'Saving...';
+
+            const data = {
+                full_name: document.getElementById('full_name').value.trim() || null,
+                phone: document.getElementById('phone').value.trim() || null,
+                telegram_chat_id: document.getElementById('telegram_chat_id').value.trim() || null
+            };
+
+            try {
+                await api.updateProfile(data);
+                await auth.loadProfile(); // Refresh local profile
+                showMessage('Profile updated successfully!', 'success');
+            } catch (err) {
+                console.error('Profile update error:', err);
+                showMessage(err.message || 'Failed to update profile', 'error');
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.textContent = 'Save Changes';
+            }
+        }
+
+        function showMessage(text, type) {
+            const msgEl = document.getElementById('form-message');
+            msgEl.textContent = text;
+            msgEl.className = `form-message ${type}`;
+            msgEl.style.display = 'block';
+
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                msgEl.style.display = 'none';
+            }, 5000);
+        }
+
+        initProfile();
+    </script>
+</body>
+</html>

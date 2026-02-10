@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Analysis | MoneyIndex</title>
+    <meta name="description" content="AI-powered trading analysis for NIFTY, BANKNIFTY, and other indices">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/ai-analysis.css">
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav class="nav-bar">
+        <div class="nav-brand">
+            <span class="brand-icon">🧠</span>
+            <span class="brand-text">AI Analysis</span>
+        </div>
+        <div class="nav-links">
+            <a href="/" class="nav-link">← Back to Dashboard</a>
+        </div>
+        <div class="nav-status">
+            <span id="ai-status" class="status-badge loading">Connecting...</span>
+            <span id="last-update" class="update-time"></span>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- AI System Overview -->
+        <section class="ai-overview">
+            <div class="overview-card">
+                <div class="overview-icon">🤖</div>
+                <div class="overview-info">
+                    <span class="overview-label">AI Model</span>
+                    <span id="ai-model" class="overview-value">Kimi K2.5</span>
+                </div>
+            </div>
+            <div class="overview-card">
+                <div class="overview-icon">📊</div>
+                <div class="overview-info">
+                    <span class="overview-label">Active Indices</span>
+                    <span id="active-count" class="overview-value">6</span>
+                </div>
+            </div>
+            <div class="overview-card">
+                <div class="overview-icon">⏱️</div>
+                <div class="overview-info">
+                    <span class="overview-label">RL Lookback</span>
+                    <span id="rl-lookback" class="overview-value">30 min</span>
+                </div>
+            </div>
+            <div class="overview-card signal-summary" id="market-sentiment">
+                <div class="overview-icon">📈</div>
+                <div class="overview-info">
+                    <span class="overview-label">Market Sentiment</span>
+                    <span class="overview-value neutral">LOADING</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Index Cards Grid -->
+        <section class="indices-grid" id="indices-container">
+            <!-- Cards will be dynamically generated -->
+        </section>
+
+        <!-- Selected Index Detail Panel -->
+        <section class="detail-panel" id="detail-panel" style="display: none;">
+            <div class="detail-header">
+                <h2 id="detail-title">NIFTY AI Analysis</h2>
+                <button class="close-btn" onclick="closeDetailPanel()">×</button>
+            </div>
+            <div class="detail-content">
+                <!-- Signal Gauge -->
+                <div class="gauge-section">
+                    <div class="gauge-container">
+                        <svg class="gauge" viewBox="0 0 200 120">
+                            <defs>
+                                <linearGradient id="gaugeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                    <stop offset="0%" style="stop-color:#ef4444" />
+                                    <stop offset="50%" style="stop-color:#f59e0b" />
+                                    <stop offset="100%" style="stop-color:#22c55e" />
+                                </linearGradient>
+                            </defs>
+                            <path class="gauge-bg" d="M20,100 A80,80 0 0,1 180,100" fill="none" stroke="#1e293b"
+                                stroke-width="12" />
+                            <path class="gauge-fill" d="M20,100 A80,80 0 0,1 180,100" fill="none"
+                                stroke="url(#gaugeGradient)" stroke-width="12" stroke-linecap="round" />
+                            <circle id="gauge-needle" cx="100" cy="100" r="6" fill="#fff" />
+                            <line id="gauge-line" x1="100" y1="100" x2="100" y2="30" stroke="#fff" stroke-width="3"
+                                stroke-linecap="round" />
+                        </svg>
+                        <div class="gauge-labels">
+                            <span class="bearish">BEARISH</span>
+                            <span class="neutral">NEUTRAL</span>
+                            <span class="bullish">BULLISH</span>
+                        </div>
+                    </div>
+                    <div class="signal-display">
+                        <div id="detail-signal" class="signal-badge neutral">NEUTRAL</div>
+                        <div id="detail-confidence" class="confidence-text">Confidence: 5/10</div>
+                    </div>
+                </div>
+
+                <!-- Confluence Factors -->
+                <div class="confluence-section">
+                    <h3>📊 Confluence Score</h3>
+                    <div class="confluence-bar-container">
+                        <div class="confluence-bar">
+                            <div id="confluence-fill" class="confluence-fill" style="width: 20%"></div>
+                        </div>
+                        <span id="confluence-score" class="confluence-score">1/6</span>
+                    </div>
+                    <div id="confluence-factors" class="factors-list">
+                        <!-- Factors will be populated -->
+                    </div>
+                </div>
+
+                <!-- ATM Strike Crossover Analysis -->
+                <div class="crossover-section">
+                    <h3>🎯 ATM Strike Crossover</h3>
+                    <div class="crossover-summary">
+                        <div class="crossover-direction" id="crossover-direction">
+                            <span class="direction-label">Direction:</span>
+                            <span id="crossover-signal" class="direction-value neutral">NEUTRAL</span>
+                        </div>
+                        <div class="crossover-score-display">
+                            <span class="score-label">Score:</span>
+                            <span id="crossover-score-value" class="score-value">0/10</span>
+                        </div>
+                    </div>
+                    <div class="crossover-stats">
+                        <div class="stat-item call-stat">
+                            <span class="stat-value" id="call-dominant-count">0</span>
+                            <span class="stat-label">CE Dominant</span>
+                        </div>
+                        <div class="stat-item put-stat">
+                            <span class="stat-value" id="put-dominant-count">0</span>
+                            <span class="stat-label">PE Dominant</span>
+                        </div>
+                        <div class="stat-item crossover-stat">
+                            <span class="stat-value" id="crossover-count">0</span>
+                            <span class="stat-label">Crossovers</span>
+                        </div>
+                    </div>
+                    <div id="crossover-visualization" class="crossover-bars">
+                        <!-- Strike bars will be rendered here -->
+                    </div>
+                    <div id="crossover-reasoning" class="crossover-reasoning">
+                        <!-- Reasoning will be populated -->
+                    </div>
+                </div>
+
+                <!-- Market Data -->
+                <div class="market-data-section">
+                    <h3>📈 Market Data</h3>
+                    <div class="data-grid">
+                        <div class="data-item">
+                            <span class="data-label">Spot</span>
+                            <span id="detail-spot" class="data-value">--</span>
+                        </div>
+                        <div class="data-item">
+                            <span class="data-label">ATM</span>
+                            <span id="detail-atm" class="data-value">--</span>
+                        </div>
+                        <div class="data-item">
+                            <span class="data-label">PCR</span>
+                            <span id="detail-pcr" class="data-value">--</span>
+                        </div>
+                        <div class="data-item">
+                            <span class="data-label">Max Pain</span>
+                            <span id="detail-maxpain" class="data-value">--</span>
+                        </div>
+                        <div class="data-item">
+                            <span class="data-label">Bullish Votes</span>
+                            <span id="detail-bullish" class="data-value bullish">--</span>
+                        </div>
+                        <div class="data-item">
+                            <span class="data-label">Bearish Votes</span>
+                            <span id="detail-bearish" class="data-value bearish">--</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI Reasoning -->
+                <div class="reasoning-section">
+                    <h3>🧠 AI Reasoning</h3>
+                    <ul id="detail-reasoning" class="reasoning-list">
+                        <li>Loading analysis...</li>
+                    </ul>
+                </div>
+
+                <!-- Environment Rating -->
+                <div class="environment-section">
+                    <h3>💹 Trading Environment</h3>
+                    <div id="detail-environment" class="environment-badge moderate">Moderate</div>
+                    <p class="environment-desc">Suitability for option buying</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="loader"></div>
+        <p>Fetching AI Analysis...</p>
+    </div>
+
+    <script src="/static/ai-analysis.js"></script>
+</body>
+
+</html>

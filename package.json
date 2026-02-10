@@ -1,0 +1,22 @@
+{
+  "name": "moneyindex-production",
+  "version": "1.0.0",
+  "description": "MoneyIndex - Real-time Options Analysis Platform",
+  "scripts": {
+    "dev": "netlify dev",
+    "build": "echo 'No build step required'",
+    "local": "python run.py",
+    "install:functions": "cd netlify/functions && npm install"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0",
+    "resend": "^2.0.0"
+  },
+  "devDependencies": {},
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "author": "Bullance",
+  "license": "UNLICENSED",
+  "private": true
+}

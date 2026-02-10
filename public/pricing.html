@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pricing - MoneyIndex</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="logo">
+                <span class="logo-icon">📊</span>
+                <span class="logo-text">MoneyIndex</span>
+            </a>
+            <div class="nav-links">
+                <a href="/#features">Features</a>
+                <a href="/contact.html">Contact</a>
+                <span id="nav-auth-links">
+                    <a href="/login.html" class="btn btn-outline">Login</a>
+                </span>
+            </div>
+        </div>
+    </nav>
+
+    <main class="pricing-page">
+        <div class="section-header">
+            <h1>Choose Your Plan</h1>
+            <p>Start analyzing options markets like a pro</p>
+        </div>
+
+        <!-- User Status Banner (shown when logged in) -->
+        <div id="user-status" class="user-status-banner" style="display: none;">
+            <div class="user-info">
+                <span>Logged in as: <strong id="user-email"></strong></span>
+                <span id="subscription-status"></span>
+            </div>
+        </div>
+
+        <div class="pricing-cards">
+            <div class="pricing-card featured">
+                <div class="pricing-badge">Most Popular</div>
+                <div class="pricing-card-header">
+                    <h2>Premium</h2>
+                    <div class="price">
+                        <span class="currency">₹</span>
+                        <span class="amount">499</span>
+                        <span class="period">/month</span>
+                    </div>
+                    <p class="price-note">One-time payment, 30 days access</p>
+                </div>
+
+                <ul class="feature-list">
+                    <li><span class="icon">✓</span> All 6 indices (NIFTY, BANKNIFTY, FINNIFTY, SENSEX, CRUDEOIL,
+                        NATURALGAS)</li>
+                    <li><span class="icon">✓</span> Real-time data updates every 20 seconds</li>
+                    <li><span class="icon">✓</span> Strike-level Open Interest analysis</li>
+                    <li><span class="icon">✓</span> Put-Call Ratio (PCR) tracking</li>
+                    <li><span class="icon">✓</span> Implied Volatility momentum</li>
+                    <li><span class="icon">✓</span> Support & Resistance from OI</li>
+                    <li><span class="icon">✓</span> Max Pain calculations</li>
+                    <li><span class="icon">✓</span> Butterfly charts visualization</li>
+                    <li><span class="icon">✓</span> Daily access token via Telegram</li>
+                    <li><span class="icon">✓</span> Email support</li>
+                </ul>
+
+                <button id="pay-button" class="btn btn-primary btn-large btn-block">
+                    Subscribe Now - ₹499
+                </button>
+
+                <p class="payment-note">
+                    <small>Secure payment via Razorpay. UPI, Cards, Net Banking accepted.</small>
+                </p>
+            </div>
+        </div>
+
+        <!-- Already Subscribed Message -->
+        <div id="already-subscribed" class="already-subscribed" style="display: none;">
+            <div class="subscribed-card">
+                <h2>🎉 You're Already Subscribed!</h2>
+                <p>Your subscription is active until <strong id="sub-end-date"></strong></p>
+                <a href="/dashboard.html" class="btn btn-primary">Go to Dashboard</a>
+            </div>
+        </div>
+
+        <!-- FAQ Section -->
+        <section class="faq-section">
+            <h2>Frequently Asked Questions</h2>
+            <div class="faq-list">
+                <div class="faq-item">
+                    <h3>How do I get the daily access token?</h3>
+                    <p>After subscribing, link your Telegram account in your profile. You'll receive the token every
+                        morning before market opens.</p>
+                </div>
+                <div class="faq-item">
+                    <h3>What payment methods are accepted?</h3>
+                    <p>We accept UPI, Credit/Debit Cards, Net Banking, and Wallets via Razorpay.</p>
+                </div>
+                <div class="faq-item">
+                    <h3>Is there a free trial?</h3>
+                    <p>We don't offer a free trial currently. You can create a free account to explore the interface.
+                    </p>
+                </div>
+                <div class="faq-item">
+                    <h3>Can I cancel anytime?</h3>
+                    <p>Yes, there's no auto-renewal. Your access simply expires after 30 days. Renew when you want.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer footer-simple">
+        <p>&copy; 2024 MoneyIndex. <a href="/contact.html">Contact</a></p>
+    </footer>
+
+    <script src="/js/config.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/payment.js"></script>
+    <script>
+        const payButton = document.getElementById('pay-button');
+        const userStatus = document.getElementById('user-status');
+        const alreadySubscribed = document.getElementById('already-subscribed');
+        const navAuthLinks = document.getElementById('nav-auth-links');
+
+        async function initPage() {
+            await auth.init();
+
+            if (auth.isLoggedIn()) {
+                // Update nav
+                navAuthLinks.innerHTML = `
+                    <a href="/profile.html">Profile</a>
+                    <button onclick="auth.logout()" class="btn btn-outline">Logout</button>
+                `;
+
+                // Show user status
+                userStatus.style.display = 'block';
+                document.getElementById('user-email').textContent = auth.session.user.email;
+
+                // Check subscription
+                const subInfo = auth.getSubscriptionInfo();
+                document.getElementById('subscription-status').innerHTML =
+                    `Status: <span class="status-badge ${subInfo.statusClass}">${subInfo.status}</span>`;
+
+                if (auth.isSubscribed()) {
+                    // Already subscribed
+                    document.querySelector('.pricing-cards').style.display = 'none';
+                    alreadySubscribed.style.display = 'block';
+                    document.getElementById('sub-end-date').textContent = subInfo.endDate;
+                } else {
+                    // Not subscribed - show pay button
+                    payButton.textContent = 'Subscribe Now - ₹499';
+                }
+            } else {
+                // Not logged in
+                payButton.textContent = 'Login to Subscribe';
+                payButton.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    sessionStorage.setItem('auth_redirect', '/pricing.html');
+                    window.location.href = '/login.html';
+                });
+                return;
+            }
+
+            // Initialize payment button for logged-in users
+            payButton.addEventListener('click', async (e) => {
+                e.preventDefault();
+
+                if (!auth.isLoggedIn()) {
+                    sessionStorage.setItem('auth_redirect', '/pricing.html');
+                    window.location.href = '/login.html';
+                    return;
+                }
+
+                const originalText = payButton.textContent;
+                payButton.disabled = true;
+                payButton.textContent = 'Processing...';
+
+                try {
+                    const result = await payment.initPayment();
+
+                    alert('Payment successful! Your subscription is now active.');
+                    window.location.href = '/dashboard.html';
+
+                } catch (err) {
+                    console.error('Payment error:', err);
+
+                    if (err.message !== 'Payment cancelled') {
+                        alert(err.message || 'Payment failed. Please try again.');
+                    }
+                } finally {
+                    payButton.disabled = false;
+                    payButton.textContent = originalText;
+                }
+            });
+        }
+
+        initPage();
+    </script>
+</body>
+
+</html>

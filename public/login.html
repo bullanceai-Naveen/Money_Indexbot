@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - MoneyIndex</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="auth-page">
+    <nav class="navbar navbar-simple">
+        <div class="nav-container">
+            <a href="/" class="logo">
+                <span class="logo-icon">📊</span>
+                <span class="logo-text">MoneyIndex</span>
+            </a>
+        </div>
+    </nav>
+
+    <main class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <h1>Welcome Back</h1>
+                <p>Login to access your dashboard</p>
+            </div>
+
+            <form id="login-form" class="auth-form">
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        required
+                        placeholder="you@example.com"
+                        autocomplete="email"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        required
+                        minlength="8"
+                        placeholder="••••••••"
+                        autocomplete="current-password"
+                    >
+                </div>
+
+                <div id="error-message" class="error-message" style="display: none;"></div>
+
+                <button type="submit" class="btn btn-primary btn-block" id="login-btn">
+                    Login
+                </button>
+            </form>
+
+            <div class="auth-footer">
+                <p>Don't have an account? <a href="/register.html">Create one</a></p>
+            </div>
+        </div>
+    </main>
+
+    <script src="/js/config.js"></script>
+    <script src="/js/auth.js"></script>
+    <script>
+        const form = document.getElementById('login-form');
+        const errorDiv = document.getElementById('error-message');
+        const loginBtn = document.getElementById('login-btn');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+
+            // Reset error
+            errorDiv.style.display = 'none';
+            loginBtn.disabled = true;
+            loginBtn.textContent = 'Logging in...';
+
+            try {
+                const result = await auth.login(email, password);
+
+                // Get redirect destination
+                const redirect = sessionStorage.getItem('auth_redirect') || '/dashboard.html';
+                sessionStorage.removeItem('auth_redirect');
+
+                // Redirect based on subscription status
+                if (result.profile?.subscription_status === 'active') {
+                    window.location.href = redirect;
+                } else {
+                    window.location.href = '/pricing.html';
+                }
+
+            } catch (err) {
+                console.error('Login error:', err);
+                errorDiv.textContent = err.message || 'Login failed. Please try again.';
+                errorDiv.style.display = 'block';
+                loginBtn.disabled = false;
+                loginBtn.textContent = 'Login';
+            }
+        });
+
+        // Check if already logged in
+        auth.init().then(() => {
+            if (auth.isLoggedIn()) {
+                if (auth.isSubscribed()) {
+                    window.location.href = '/dashboard.html';
+                } else {
+                    window.location.href = '/pricing.html';
+                }
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,1518 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Index OI Scanner - Real-time Options Analysis</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+
+    <link rel="stylesheet" href="/static/styles.css">
+
+</head>
+
+
+
+<body>
+
+    <div class="app-container">
+
+        <!-- Header -->
+
+        <header class="app-header">
+
+            <div class="header-left">
+
+                <h1 class="app-title">
+
+                    <span class="title-icon">📊</span>
+
+                    <span>INDEX OI SCANNER</span>
+
+                </h1>
+
+                <span class="version-badge">v1.0</span>
+
+            </div>
+
+            <div class="header-center">
+
+                <nav class="main-nav">
+
+                    <button class="nav-btn active" data-page="dashboard">
+
+                        <span class="nav-icon">🏠</span>
+
+                        <span>Dashboard</span>
+
+                    </button>
+
+                    <button class="nav-btn" data-page="nifty">
+
+                        <span class="nav-icon">📈</span>
+
+                        <span>NIFTY</span>
+
+                    </button>
+
+                    <button class="nav-btn" data-page="banknifty">
+
+                        <span class="nav-icon">🏦</span>
+
+                        <span>BANKNIFTY</span>
+
+                    </button>
+
+                    <button class="nav-btn" data-page="finnifty">
+
+                        <span class="nav-icon">💰</span>
+
+                        <span>FINNIFTY</span>
+
+                    </button>
+
+                    <button class="nav-btn" data-page="sensex">
+
+                        <span class="nav-icon">🔵</span>
+
+                        <span>SENSEX</span>
+
+                    </button>
+
+                    <button class="nav-btn" data-page="crudeoil">
+
+                        <span class="nav-icon">🛢️</span>
+
+                        <span>CRUDE</span>
+
+                    </button>
+
+                    <button class="nav-btn" data-page="naturalgas">
+
+                        <span class="nav-icon">🔥</span>
+
+                        <span>NATGAS</span>
+
+                    </button>
+
+                    <a href="/ai-analysis" class="nav-btn ai-nav-btn"
+                        style="background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white; text-decoration: none;">
+
+                        <span class="nav-icon">🧠</span>
+
+                        <span>AI Analysis</span>
+
+                    </a>
+
+                </nav>
+
+            </div>
+
+            <div class="header-right">
+
+                <div class="status-indicator" id="connection-status">
+
+                    <span class="status-dot"></span>
+
+                    <span class="status-text">Connecting...</span>
+
+                </div>
+
+                <div class="poll-counter">
+
+                    Poll: <span id="poll-count">0</span>
+
+                </div>
+
+            </div>
+
+        </header>
+
+
+
+        <!-- Main Content -->
+
+        <main class="main-content">
+
+            <!-- Dashboard Page -->
+
+            <section id="page-dashboard" class="page active">
+
+                <div class="page-header">
+
+                    <h2 class="page-title">Index Dashboard</h2>
+
+                    <p class="page-subtitle">Real-time overview of all indices</p>
+
+                </div>
+
+
+
+                <div class="dashboard-grid" id="dashboard-cards">
+
+                    <!-- Index cards will be populated dynamically -->
+
+                </div>
+
+
+
+                <div class="dashboard-charts">
+
+                    <div class="chart-panel">
+
+                        <h3 class="panel-title">PCR Comparison</h3>
+
+                        <div id="dashboard-pcr-chart" class="chart-container" style="height: 250px;"></div>
+
+                    </div>
+
+                    <div class="chart-panel">
+
+                        <h3 class="panel-title">Net Score Comparison</h3>
+
+                        <div id="dashboard-score-chart" class="chart-container" style="height: 250px;"></div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+
+            <!-- NIFTY Page -->
+
+            <section id="page-nifty" class="page">
+
+                <div class="index-page" data-index="NIFTY">
+
+                    <div class="page-header">
+
+                        <h2 class="page-title">NIFTY 50 Strike Analysis</h2>
+
+                        <div class="index-stats">
+
+                            <div class="stat-item">
+
+                                <span class="stat-label">Spot</span>
+
+                                <span class="stat-value font-mono" id="nifty-spot">--</span>
+
+                            </div>
+
+                            <div class="stat-item">
+
+                                <span class="stat-label">ATM</span>
+
+                                <span class="stat-value font-mono" id="nifty-atm">--</span>
+
+                            </div>
+
+                            <div class="stat-item" id="nifty-trend-container">
+
+                                <span class="stat-label">Trend</span>
+
+                                <span class="trend-badge neutral" id="nifty-trend">NEUTRAL</span>
+
+                            </div>
+
+                            <div class="stat-item">
+
+                                <span class="stat-label">Net Score</span>
+
+                                <span class="stat-value font-mono" id="nifty-score">0.00</span>
+
+                            </div>
+
+                            <div class="stat-item">
+
+                                <span class="stat-label">PCR</span>
+
+                                <span class="stat-value font-mono" id="nifty-pcr">0.00</span>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <div class="signal-pills">
+
+                        <span class="pill bullish">🟢 <span id="nifty-bullish">0</span></span>
+
+                        <span class="pill bearish">🔴 <span id="nifty-bearish">0</span></span>
+
+                        <span class="pill neutral">⚪ <span id="nifty-neutral">0</span></span>
+
+                    </div>
+
+
+
+                    <!-- IV Stats Panel -->
+
+                    <div class="iv-stats-panel" id="nifty-iv-panel">
+
+                        <div class="iv-stat-group">
+
+                            <div class="iv-stat">
+
+                                <span class="iv-stat-label">Current IV</span>
+
+                                <span class="iv-stat-value font-mono" id="nifty-current-iv">--</span>
+
+                            </div>
+
+                            <div class="iv-stat">
+
+                                <span class="iv-stat-label">IV Change</span>
+
+                                <span class="iv-stat-value font-mono" id="nifty-iv-change">--</span>
+
+                            </div>
+
+                            <div class="iv-stat">
+
+                                <span class="iv-stat-label">IV Trend</span>
+
+                                <span class="iv-trend-badge stable" id="nifty-iv-trend">STABLE</span>
+
+                            </div>
+
+                            <div class="iv-stat">
+
+                                <span class="iv-stat-label">Pattern</span>
+
+                                <span class="iv-pattern-badge none" id="nifty-pattern-status">None</span>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <div class="charts-grid">
+
+                        <div class="chart-panel full-width candlestick-panel">
+
+                            <h3 class="panel-title">📊 Price Action & OI Flow</h3>
+
+                            <div id="nifty-candlestick-chart" class="chart-container" style="height: 450px;"></div>
+
+                        </div>
+
+                        <div class="chart-panel full-width">
+
+                            <h3 class="panel-title">Strike OI Analysis (NET Signal)</h3>
+
+                            <div id="nifty-bar-chart" class="chart-container"
+                                style="max-height: 600px; overflow-y: auto;"></div>
+
+                        </div>
+
+
+
+                        <div class="chart-panel full-width">
+
+                            <h3 class="panel-title">Cumulative Score</h3>
+
+                            <div id="nifty-timeseries-chart" class="chart-container" style="height: 200px;"></div>
+
+                        </div>
+
+
+
+                        <div class="chart-panel full-width">
+
+                            <h3 class="panel-title">Interval Dominance</h3>
+
+                            <div id="nifty-dominance-chart" class="chart-container" style="height: 200px;"></div>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <div class="info-panels">
+
+                        <div class="info-panel">
+
+                            <h3 class="panel-title">Support / Resistance</h3>
+
+                            <div id="nifty-sr-levels" class="sr-container"></div>
+
+                        </div>
+
+                        <div class="info-panel">
+
+                            <h3 class="panel-title">Max Pain</h3>
+
+                            <div id="nifty-max-pain" class="max-pain-container"></div>
+
+                        </div>
+
+                        <div class="info-panel">
+
+                            <h3 class="panel-title">PCR Trend</h3>
+
+                            <div id="nifty-pcr-chart" class="chart-container" style="height: 150px;"></div>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <div class="data-table-container">
+
+                        <h3 class="panel-title">Strike Data</h3>
+
+                        <table class="data-table" id="nifty-strikes-table">
+
+                            <thead>
+
+                                <tr>
+
+                                    <th>Strike</th>
+
+                                    <th>CE OI</th>
+
+                                    <th>CE Chg%</th>
+
+                                    <th>PE OI</th>
+
+                                    <th>PE Chg%</th>
+
+                                    <th>Net Signal</th>
+
+                                    <th>Signal</th>
+
+                                </tr>
+
+                            </thead>
+
+                            <tbody></tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+
+            <!-- BANKNIFTY Page -->
+
+            <section id="page-banknifty" class="page">
+
+                <div class="index-page" data-index="BANKNIFTY">
+
+                    <div class="page-header">
+
+                        <h2 class="page-title">BANK NIFTY Strike Analysis</h2>
+
+                        <div class="index-stats">
+
+                            <div class="stat-item">
+
+                                <span class="stat-label">Spot</span>
+
+                                <span class="stat-value font-mono" id="banknifty-spot">--</span>
+
+                            </div>
+
+                            <div class="stat-item">
+
+                                <span class="stat-label">ATM</span>
+
+                                <span class="stat-value font-mono" id="banknifty-atm">--</span>
+
+                            </div>
+
+                            <div class="stat-item">
+
+                                <span class="stat-label">Trend</span>
+
+                                <span class="trend-badge neutral" id="banknifty-trend">NEUTRAL</span>
+
+                            </div>
+
+                            <div class="stat-item">
+
+                                <span class="stat-label">Net Score</span>
+
+                                <span class="stat-value font-mono" id="banknifty-score">0.00</span>
+
+                            </div>
+
+                            <div class="stat-item">
+
+                                <span class="stat-label">PCR</span>
+
+                                <span class="stat-value font-mono" id="banknifty-pcr">0.00</span>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <div class="signal-pills">
+
+                        <span class="pill bullish">🟢 <span id="banknifty-bullish">0</span></span>
+
+                        <span class="pill bearish">🔴 <span id="banknifty-bearish">0</span></span>
+
+                        <span class="pill neutral">⚪ <span id="banknifty-neutral">0</span></span>
+
+                    </div>
+
+
+
+                    <!-- IV Stats Panel -->
+
+                    <div class="iv-stats-panel" id="banknifty-iv-panel">
+
+                        <div class="iv-stat-group">
+
+                            <div class="iv-stat">
+
+                                <span class="iv-stat-label">Current IV</span>
+
+                                <span class="iv-stat-value font-mono" id="banknifty-current-iv">--</span>
+
+                            </div>
+
+                            <div class="iv-stat">
+
+                                <span class="iv-stat-label">IV Change</span>
+
+                                <span class="iv-stat-value font-mono" id="banknifty-iv-change">--</span>
+
+                            </div>
+
+                            <div class="iv-stat">
+
+                                <span class="iv-stat-label">IV Trend</span>
+
+                                <span class="iv-trend-badge stable" id="banknifty-iv-trend">STABLE</span>
+
+                            </div>
+
+                            <div class="iv-stat">
+
+                                <span class="iv-stat-label">Pattern</span>
+
+                                <span class="iv-pattern-badge none" id="banknifty-pattern-status">None</span>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <div class="charts-grid">
+
+                        <div class="chart-panel full-width candlestick-panel">
+
+                            <h3 class="panel-title">📊 Price Action & OI Flow</h3>
+
+                            <div id="banknifty-candlestick-chart" class="chart-container" style="height: 450px;"></div>
+
+                        </div>
+
+                        <div class="chart-panel full-width">
+
+                            <h3 class="panel-title">Strike OI Analysis (NET Signal)</h3>
+
+                            <div id="banknifty-bar-chart" class="chart-container"
+                                style="max-height: 600px; overflow-y: auto;"></div>
+
+                        </div>
+
+
+
+                        <div class="chart-panel full-width">
+
+                            <h3 class="panel-title">Cumulative Score</h3>
+
+                            <div id="banknifty-timeseries-chart" class="chart-container" style="height: 200px;"></div>
+
+                        </div>
+
+
+
+                        <div class="chart-panel full-width">
+
+                            <h3 class="panel-title">Interval Dominance</h3>
+
+                            <div id="banknifty-dominance-chart" class="chart-container" style="height: 200px;"></div>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <div class="info-panels">
+
+                        <div class="info-panel">
+
+                            <h3 class="panel-title">Support / Resistance</h3>
+
+                            <div id="banknifty-sr-levels" class="sr-container"></div>
+
+                        </div>
+
+                        <div class="info-panel">
+
+                            <h3 class="panel-title">Max Pain</h3>
+
+                            <div id="banknifty-max-pain" class="max-pain-container"></div>
+
+                        </div>
+
+                        <div class="info-panel">
+
+                            <h3 class="panel-title">PCR Trend</h3>
+
+                            <div id="banknifty-pcr-chart" class="chart-container" style="height: 150px;"></div>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <div class="data-table-container">
+
+                        <h3 class="panel-title">Strike Data</h3>
+
+                        <table class="data-table" id="banknifty-strikes-table">
+
+                            <thead>
+
+                                <tr>
+
+                                    <th>Strike</th>
+
+                                    <th>CE OI</th>
+
+                                    <th>CE Chg%</th>
+
+                                    <th>PE OI</th>
+
+                                    <th>PE Chg%</th>
+
+                                    <th>Net Signal</th>
+
+                                    <th>Signal</th>
+
+                                </tr>
+
+                            </thead>
+
+                            <tbody></tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+
+            <!-- FINNIFTY Page -->
+
+            <section id="page-finnifty" class="page">
+
+                <div class="index-page" data-index="FINNIFTY">
+
+                    <div class="page-header">
+
+                        <h2 class="page-title">FIN NIFTY Strike Analysis</h2>
+
+                        <div class="index-stats">
+
+                            <div class="stat-item">
+
+                                <span class="stat-label">Spot</span>
+
+                                <span class="stat-value font-mono" id="finnifty-spot">--</span>
+
+                            </div>
+
+                            <div class="stat-item">
+
+                                <span class="stat-label">ATM</span>
+
+                                <span class="stat-value font-mono" id="finnifty-atm">--</span>
+
+                            </div>
+
+                            <div class="stat-item">
+
+                                <span class="stat-label">Trend</span>
+
+                                <span class="trend-badge neutral" id="finnifty-trend">NEUTRAL</span>
+
+                            </div>
+
+                            <div class="stat-item">
+
+                                <span class="stat-label">Net Score</span>
+
+                                <span class="stat-value font-mono" id="finnifty-score">0.00</span>
+
+                            </div>
+
+                            <div class="stat-item">
+
+                                <span class="stat-label">PCR</span>
+
+                                <span class="stat-value font-mono" id="finnifty-pcr">0.00</span>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <div class="signal-pills">
+
+                        <span class="pill bullish">🟢 <span id="finnifty-bullish">0</span></span>
+
+                        <span class="pill bearish">🔴 <span id="finnifty-bearish">0</span></span>
+
+                        <span class="pill neutral">⚪ <span id="finnifty-neutral">0</span></span>
+
+                    </div>
+
+
+
+                    <!-- IV Stats Panel -->
+
+                    <div class="iv-stats-panel" id="finnifty-iv-panel">
+
+                        <div class="iv-stat-group">
+
+                            <div class="iv-stat">
+
+                                <span class="iv-stat-label">Current IV</span>
+
+                                <span class="iv-stat-value font-mono" id="finnifty-current-iv">--</span>
+
+                            </div>
+
+                            <div class="iv-stat">
+
+                                <span class="iv-stat-label">IV Change</span>
+
+                                <span class="iv-stat-value font-mono" id="finnifty-iv-change">--</span>
+
+                            </div>
+
+                            <div class="iv-stat">
+
+                                <span class="iv-stat-label">IV Trend</span>
+
+                                <span class="iv-trend-badge stable" id="finnifty-iv-trend">STABLE</span>
+
+                            </div>
+
+                            <div class="iv-stat">
+
+                                <span class="iv-stat-label">Pattern</span>
+
+                                <span class="iv-pattern-badge none" id="finnifty-pattern-status">None</span>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <div class="charts-grid">
+
+                        <div class="chart-panel full-width candlestick-panel">
+
+                            <h3 class="panel-title">📊 Price Action & OI Flow</h3>
+
+                            <div id="finnifty-candlestick-chart" class="chart-container" style="height: 450px;"></div>
+
+                        </div>
+
+                        <div class="chart-panel full-width">
+
+                            <h3 class="panel-title">Strike OI Analysis (NET Signal)</h3>
+
+                            <div id="finnifty-bar-chart" class="chart-container"
+                                style="max-height: 600px; overflow-y: auto;"></div>
+
+                        </div>
+
+
+
+                        <div class="chart-panel full-width">
+
+                            <h3 class="panel-title">Cumulative Score</h3>
+
+                            <div id="finnifty-timeseries-chart" class="chart-container" style="height: 200px;"></div>
+
+                        </div>
+
+
+
+                        <div class="chart-panel full-width">
+
+                            <h3 class="panel-title">Interval Dominance</h3>
+
+                            <div id="finnifty-dominance-chart" class="chart-container" style="height: 200px;"></div>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <div class="info-panels">
+
+                        <div class="info-panel">
+
+                            <h3 class="panel-title">Support / Resistance</h3>
+
+                            <div id="finnifty-sr-levels" class="sr-container"></div>
+
+                        </div>
+
+                        <div class="info-panel">
+
+                            <h3 class="panel-title">Max Pain</h3>
+
+                            <div id="finnifty-max-pain" class="max-pain-container"></div>
+
+                        </div>
+
+                        <div class="info-panel">
+
+                            <h3 class="panel-title">PCR Trend</h3>
+
+                            <div id="finnifty-pcr-chart" class="chart-container" style="height: 150px;"></div>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <div class="data-table-container">
+
+                        <h3 class="panel-title">Strike Data</h3>
+
+                        <table class="data-table" id="finnifty-strikes-table">
+
+                            <thead>
+
+                                <tr>
+
+                                    <th>Strike</th>
+
+                                    <th>CE OI</th>
+
+                                    <th>CE Chg%</th>
+
+                                    <th>PE OI</th>
+
+                                    <th>PE Chg%</th>
+
+                                    <th>Net Signal</th>
+
+                                    <th>Signal</th>
+
+                                </tr>
+
+                            </thead>
+
+                            <tbody></tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+
+            <!-- SENSEX Page -->
+
+            <section id="page-sensex" class="page">
+
+                <div class="index-page" data-index="SENSEX">
+
+                    <div class="page-header">
+
+                        <h2 class="page-title">SENSEX Strike Analysis</h2>
+
+                        <div class="index-stats">
+
+                            <div class="stat-item">
+
+                                <span class="stat-label">Spot</span>
+
+                                <span class="stat-value font-mono" id="sensex-spot">--</span>
+
+                            </div>
+
+                            <div class="stat-item">
+
+                                <span class="stat-label">ATM</span>
+
+                                <span class="stat-value font-mono" id="sensex-atm">--</span>
+
+                            </div>
+
+                            <div class="stat-item">
+
+                                <span class="stat-label">Trend</span>
+
+                                <span class="trend-badge neutral" id="sensex-trend">NEUTRAL</span>
+
+                            </div>
+
+                            <div class="stat-item">
+
+                                <span class="stat-label">Net Score</span>
+
+                                <span class="stat-value font-mono" id="sensex-score">0.00</span>
+
+                            </div>
+
+                            <div class="stat-item">
+
+                                <span class="stat-label">PCR</span>
+
+                                <span class="stat-value font-mono" id="sensex-pcr">0.00</span>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <div class="signal-pills">
+
+                        <span class="pill bullish">🟢 <span id="sensex-bullish">0</span></span>
+
+                        <span class="pill bearish">🔴 <span id="sensex-bearish">0</span></span>
+
+                        <span class="pill neutral">⚪ <span id="sensex-neutral">0</span></span>
+
+                    </div>
+
+
+
+                    <!-- IV Stats Panel -->
+
+                    <div class="iv-stats-panel" id="sensex-iv-panel">
+
+                        <div class="iv-stat-group">
+
+                            <div class="iv-stat">
+
+                                <span class="iv-stat-label">Current IV</span>
+
+                                <span class="iv-stat-value font-mono" id="sensex-current-iv">--</span>
+
+                            </div>
+
+                            <div class="iv-stat">
+
+                                <span class="iv-stat-label">IV Change</span>
+
+                                <span class="iv-stat-value font-mono" id="sensex-iv-change">--</span>
+
+                            </div>
+
+                            <div class="iv-stat">
+
+                                <span class="iv-stat-label">IV Trend</span>
+
+                                <span class="iv-trend-badge stable" id="sensex-iv-trend">STABLE</span>
+
+                            </div>
+
+                            <div class="iv-stat">
+
+                                <span class="iv-stat-label">Pattern</span>
+
+                                <span class="iv-pattern-badge none" id="sensex-pattern-status">None</span>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <div class="charts-grid">
+
+                        <div class="chart-panel full-width candlestick-panel">
+
+                            <h3 class="panel-title">📊 Price Action & OI Flow</h3>
+
+                            <div id="sensex-candlestick-chart" class="chart-container" style="height: 450px;"></div>
+
+                        </div>
+
+                        <div class="chart-panel full-width">
+
+                            <h3 class="panel-title">Strike OI Analysis (NET Signal)</h3>
+
+                            <div id="sensex-bar-chart" class="chart-container"
+                                style="max-height: 600px; overflow-y: auto;"></div>
+
+                        </div>
+
+
+
+                        <div class="chart-panel full-width">
+
+                            <h3 class="panel-title">Cumulative Score</h3>
+
+                            <div id="sensex-timeseries-chart" class="chart-container" style="height: 200px;"></div>
+
+                        </div>
+
+
+
+                        <div class="chart-panel full-width">
+
+                            <h3 class="panel-title">Interval Dominance</h3>
+
+                            <div id="sensex-dominance-chart" class="chart-container" style="height: 200px;"></div>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <div class="info-panels">
+
+                        <div class="info-panel">
+
+                            <h3 class="panel-title">Support / Resistance</h3>
+
+                            <div id="sensex-sr-levels" class="sr-container"></div>
+
+                        </div>
+
+                        <div class="info-panel">
+
+                            <h3 class="panel-title">Max Pain</h3>
+
+                            <div id="sensex-max-pain" class="max-pain-container"></div>
+
+                        </div>
+
+                        <div class="info-panel">
+
+                            <h3 class="panel-title">PCR Trend</h3>
+
+                            <div id="sensex-pcr-chart" class="chart-container" style="height: 150px;"></div>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <div class="data-table-container">
+
+                        <h3 class="panel-title">Strike Data</h3>
+
+                        <table class="data-table" id="sensex-strikes-table">
+
+                            <thead>
+
+                                <tr>
+
+                                    <th>Strike</th>
+
+                                    <th>CE OI</th>
+
+                                    <th>CE Chg%</th>
+
+                                    <th>PE OI</th>
+
+                                    <th>PE Chg%</th>
+
+                                    <th>Net Signal</th>
+
+                                    <th>Signal</th>
+
+                                </tr>
+
+                            </thead>
+
+                            <tbody></tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+
+            <!-- CRUDE OIL Page -->
+
+            <section id="page-crudeoil" class="page">
+
+                <div class="index-page" data-index="CRUDEOIL">
+
+                    <div class="page-header">
+
+                        <h2 class="page-title">🛢️ CRUDE OIL Strike Analysis</h2>
+
+                        <div class="index-stats">
+
+                            <div class="stat-item">
+
+                                <span class="stat-label">Spot</span>
+
+                                <span class="stat-value font-mono" id="crudeoil-spot">--</span>
+
+                            </div>
+
+                            <div class="stat-item">
+
+                                <span class="stat-label">ATM</span>
+
+                                <span class="stat-value font-mono" id="crudeoil-atm">--</span>
+
+                            </div>
+
+                            <div class="stat-item">
+
+                                <span class="stat-label">Trend</span>
+
+                                <span class="trend-badge neutral" id="crudeoil-trend">NEUTRAL</span>
+
+                            </div>
+
+                            <div class="stat-item">
+
+                                <span class="stat-label">Net Score</span>
+
+                                <span class="stat-value font-mono" id="crudeoil-score">0.00</span>
+
+                            </div>
+
+                            <div class="stat-item">
+
+                                <span class="stat-label">PCR</span>
+
+                                <span class="stat-value font-mono" id="crudeoil-pcr">0.00</span>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <div class="signal-pills">
+
+                        <span class="pill bullish">🟢 <span id="crudeoil-bullish">0</span></span>
+
+                        <span class="pill bearish">🔴 <span id="crudeoil-bearish">0</span></span>
+
+                        <span class="pill neutral">⚪ <span id="crudeoil-neutral">0</span></span>
+
+                    </div>
+
+
+
+                    <!-- Note: IV panel hidden for MCX commodities -->
+
+
+
+                    <div class="charts-grid">
+
+                        <div class="chart-panel full-width candlestick-panel">
+
+                            <h3 class="panel-title">📊 Price Action & OI Flow</h3>
+
+                            <div id="crudeoil-candlestick-chart" class="chart-container" style="height: 450px;"></div>
+
+                        </div>
+
+                        <div class="chart-panel full-width">
+
+                            <h3 class="panel-title">Strike OI Analysis (NET Signal)</h3>
+
+                            <div id="crudeoil-bar-chart" class="chart-container"
+                                style="max-height: 600px; overflow-y: auto;"></div>
+
+                        </div>
+
+
+
+                        <div class="chart-panel full-width">
+
+                            <h3 class="panel-title">Cumulative Score</h3>
+
+                            <div id="crudeoil-timeseries-chart" class="chart-container" style="height: 200px;"></div>
+
+                        </div>
+
+
+
+                        <div class="chart-panel full-width">
+
+                            <h3 class="panel-title">Interval Dominance</h3>
+
+                            <div id="crudeoil-dominance-chart" class="chart-container" style="height: 200px;"></div>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <div class="info-panels">
+
+                        <div class="info-panel">
+
+                            <h3 class="panel-title">Support / Resistance</h3>
+
+                            <div id="crudeoil-sr-levels" class="sr-container"></div>
+
+                        </div>
+
+                        <div class="info-panel">
+
+                            <h3 class="panel-title">Max Pain</h3>
+
+                            <div id="crudeoil-max-pain" class="max-pain-container"></div>
+
+                        </div>
+
+                        <div class="info-panel">
+
+                            <h3 class="panel-title">PCR Trend</h3>
+
+                            <div id="crudeoil-pcr-chart" class="chart-container" style="height: 150px;"></div>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <div class="data-table-container">
+
+                        <h3 class="panel-title">Strike Details</h3>
+
+                        <table class="data-table" id="crudeoil-strikes-table">
+
+                            <thead>
+
+                                <tr>
+
+                                    <th>Strike</th>
+
+                                    <th>CE OI</th>
+
+                                    <th>CE Chg%</th>
+
+                                    <th>PE OI</th>
+
+                                    <th>PE Chg%</th>
+
+                                    <th>Net</th>
+
+                                    <th>Signal</th>
+
+                                </tr>
+
+                            </thead>
+
+                            <tbody></tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+
+            <!-- NATURAL GAS Page -->
+
+            <section id="page-naturalgas" class="page">
+
+                <div class="index-page" data-index="NATURALGAS">
+
+                    <div class="page-header">
+
+                        <h2 class="page-title">🔥 NATURAL GAS Strike Analysis</h2>
+
+                        <div class="index-stats">
+
+                            <div class="stat-item">
+
+                                <span class="stat-label">Spot</span>
+
+                                <span class="stat-value font-mono" id="naturalgas-spot">--</span>
+
+                            </div>
+
+                            <div class="stat-item">
+
+                                <span class="stat-label">ATM</span>
+
+                                <span class="stat-value font-mono" id="naturalgas-atm">--</span>
+
+                            </div>
+
+                            <div class="stat-item">
+
+                                <span class="stat-label">Trend</span>
+
+                                <span class="trend-badge neutral" id="naturalgas-trend">NEUTRAL</span>
+
+                            </div>
+
+                            <div class="stat-item">
+
+                                <span class="stat-label">Net Score</span>
+
+                                <span class="stat-value font-mono" id="naturalgas-score">0.00</span>
+
+                            </div>
+
+                            <div class="stat-item">
+
+                                <span class="stat-label">PCR</span>
+
+                                <span class="stat-value font-mono" id="naturalgas-pcr">0.00</span>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <div class="signal-pills">
+
+                        <span class="pill bullish">🟢 <span id="naturalgas-bullish">0</span></span>
+
+                        <span class="pill bearish">🔴 <span id="naturalgas-bearish">0</span></span>
+
+                        <span class="pill neutral">⚪ <span id="naturalgas-neutral">0</span></span>
+
+                    </div>
+
+
+
+                    <!-- Note: IV panel hidden for MCX commodities -->
+
+
+
+                    <div class="charts-grid">
+
+                        <div class="chart-panel full-width candlestick-panel">
+
+                            <h3 class="panel-title">📊 Price Action & OI Flow</h3>
+
+                            <div id="naturalgas-candlestick-chart" class="chart-container" style="height: 450px;"></div>
+
+                        </div>
+
+                        <div class="chart-panel full-width">
+
+                            <h3 class="panel-title">Strike OI Analysis (NET Signal)</h3>
+
+                            <div id="naturalgas-bar-chart" class="chart-container"
+                                style="max-height: 600px; overflow-y: auto;"></div>
+
+                        </div>
+
+
+
+                        <div class="chart-panel full-width">
+
+                            <h3 class="panel-title">Cumulative Score</h3>
+
+                            <div id="naturalgas-timeseries-chart" class="chart-container" style="height: 200px;"></div>
+
+                        </div>
+
+
+
+                        <div class="chart-panel full-width">
+
+                            <h3 class="panel-title">Interval Dominance</h3>
+
+                            <div id="naturalgas-dominance-chart" class="chart-container" style="height: 200px;"></div>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <div class="info-panels">
+
+                        <div class="info-panel">
+
+                            <h3 class="panel-title">Support / Resistance</h3>
+
+                            <div id="naturalgas-sr-levels" class="sr-container"></div>
+
+                        </div>
+
+                        <div class="info-panel">
+
+                            <h3 class="panel-title">Max Pain</h3>
+
+                            <div id="naturalgas-max-pain" class="max-pain-container"></div>
+
+                        </div>
+
+                        <div class="info-panel">
+
+                            <h3 class="panel-title">PCR Trend</h3>
+
+                            <div id="naturalgas-pcr-chart" class="chart-container" style="height: 150px;"></div>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <div class="data-table-container">
+
+                        <h3 class="panel-title">Strike Details</h3>
+
+                        <table class="data-table" id="naturalgas-strikes-table">
+
+                            <thead>
+
+                                <tr>
+
+                                    <th>Strike</th>
+
+                                    <th>CE OI</th>
+
+                                    <th>CE Chg%</th>
+
+                                    <th>PE OI</th>
+
+                                    <th>PE Chg%</th>
+
+                                    <th>Net</th>
+
+                                    <th>Signal</th>
+
+                                </tr>
+
+                            </thead>
+
+                            <tbody></tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+        </main>
+
+
+
+        <!-- Footer -->
+
+        <footer class="app-footer">
+
+            <div class="footer-left">
+
+                <span>Last Update: <span id="last-update">--</span></span>
+
+            </div>
+
+            <div class="footer-center">
+
+                <span>Index OI Scanner v1.0 | Separate from Stock Scanner</span>
+
+            </div>
+
+            <div class="footer-right">
+
+                <span id="market-status">Pre-Market</span>
+
+            </div>
+
+        </footer>
+
+    </div>
+
+
+
+    <script src="/static/charts.js"></script>
+
+    <script src="/static/app.js"></script>
+
+</body>
+
+
+
+</html>

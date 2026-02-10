@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - MoneyIndex</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/static/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+<body class="dashboard-page">
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="loading-spinner"></div>
+        <p>Loading dashboard...</p>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="navbar dashboard-nav">
+        <div class="nav-container">
+            <a href="/dashboard.html" class="logo">
+                <span class="logo-icon">📊</span>
+                <span class="logo-text">MoneyIndex</span>
+            </a>
+            <div class="nav-links">
+                <a href="/dashboard.html" class="active">Dashboard</a>
+                <a href="/profile.html">Profile</a>
+                <span id="admin-link"></span>
+                <div class="user-menu">
+                    <span id="user-email" class="user-email"></span>
+                    <button onclick="auth.logout()" class="btn btn-outline btn-sm">Logout</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Subscription Banner -->
+    <div id="subscription-banner" class="subscription-banner" style="display: none;">
+        <span id="sub-message"></span>
+        <a href="/pricing.html" class="btn btn-sm btn-primary">Renew Now</a>
+    </div>
+
+    <!-- Main Dashboard Content -->
+    <main id="dashboard-content" class="dashboard-content" style="display: none;">
+        <!-- Dashboard Header -->
+        <div class="dashboard-header">
+            <h1>Market Dashboard</h1>
+            <div class="dashboard-meta">
+                <span id="last-update">Last updated: --</span>
+                <span id="market-status" class="market-status">Market Closed</span>
+            </div>
+        </div>
+
+        <!-- Index Cards Grid -->
+        <div id="index-cards" class="index-cards-grid">
+            <!-- Cards will be populated by JavaScript -->
+        </div>
+
+        <!-- Your existing dashboard content will load here -->
+        <div id="app-container">
+            <!-- If you want to embed your existing static/index.html content -->
+        </div>
+    </main>
+
+    <!-- Error State -->
+    <div id="error-state" class="error-state" style="display: none;">
+        <h2>Unable to load dashboard</h2>
+        <p id="error-message">Please try again later.</p>
+        <button onclick="location.reload()" class="btn btn-primary">Retry</button>
+    </div>
+
+    <script src="/js/config.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/api.js"></script>
+    <script>
+        const INDICES = ['NIFTY', 'BANKNIFTY', 'FINNIFTY', 'SENSEX', 'CRUDEOIL', 'NATURALGAS'];
+
+        async function initDashboard() {
+            // Require subscription
+            const allowed = await auth.requireSubscription();
+            if (!allowed) return;
+
+            // Hide loading
+            document.getElementById('loading-overlay').style.display = 'none';
+            document.getElementById('dashboard-content').style.display = 'block';
+
+            // Show user info
+            document.getElementById('user-email').textContent = auth.session?.user?.email || '';
+
+            // Show admin link if admin
+            if (auth.isAdmin()) {
+                document.getElementById('admin-link').innerHTML = '<a href="/admin.html">Admin</a>';
+            }
+
+            // Check subscription expiry warning
+            const subInfo = auth.getSubscriptionInfo();
+            if (subInfo.daysLeft > 0 && subInfo.daysLeft <= 7) {
+                const banner = document.getElementById('subscription-banner');
+                banner.style.display = 'flex';
+                document.getElementById('sub-message').textContent =
+                    `Your subscription expires in ${subInfo.daysLeft} day${subInfo.daysLeft > 1 ? 's' : ''}`;
+            }
+
+            // Load dashboard data
+            await loadDashboardData();
+
+            // Set up auto-refresh
+            setInterval(loadDashboardData, 60000); // Refresh every minute
+        }
+
+        async function loadDashboardData() {
+            try {
+                const response = await api.getDashboard();
+                const data = response.data;
+
+                updateIndexCards(data);
+                updateLastUpdate(response.timestamp || new Date().toISOString(), response.cached);
+                updateMarketStatus();
+
+            } catch (err) {
+                console.error('Dashboard load error:', err);
+
+                if (err.status === 401 || err.status === 403) {
+                    // Auth error - redirect
+                    window.location.href = '/pricing.html';
+                    return;
+                }
+
+                // Show error for other errors (but don't hide dashboard if data was shown)
+                if (!document.querySelector('.index-card')) {
+                    document.getElementById('dashboard-content').style.display = 'none';
+                    document.getElementById('error-state').style.display = 'block';
+                    document.getElementById('error-message').textContent = err.message;
+                }
+            }
+        }
+
+        function updateIndexCards(data) {
+            const container = document.getElementById('index-cards');
+
+            const html = INDICES.map(index => {
+                const indexData = data[index] || {};
+                const changeClass = (indexData.change || 0) >= 0 ? 'positive' : 'negative';
+                const changeIcon = (indexData.change || 0) >= 0 ? '▲' : '▼';
+
+                return `
+                    <div class="index-card">
+                        <div class="index-card-header">
+                            <h3>${index}</h3>
+                            ${indexData.error ? '<span class="badge badge-warning">Data Unavailable</span>' : ''}
+                        </div>
+                        <div class="index-card-price">
+                            <span class="price">${formatNumber(indexData.spot_price)}</span>
+                            <span class="change ${changeClass}">
+                                ${changeIcon} ${formatNumber(Math.abs(indexData.change || 0))}
+                                (${formatPercent(indexData.change_percent || 0)})
+                            </span>
+                        </div>
+                        <div class="index-card-ohlc">
+                            <span>O: ${formatNumber(indexData.open)}</span>
+                            <span>H: ${formatNumber(indexData.high)}</span>
+                            <span>L: ${formatNumber(indexData.low)}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML = html;
+        }
+
+        function updateLastUpdate(timestamp, cached) {
+            const date = new Date(timestamp);
+            const timeStr = date.toLocaleTimeString('en-IN');
+            const cacheStr = cached ? ' (cached)' : '';
+            document.getElementById('last-update').textContent = `Last updated: ${timeStr}${cacheStr}`;
+        }
+
+        function updateMarketStatus() {
+            const now = new Date();
+            const hours = now.getHours();
+            const minutes = now.getMinutes();
+            const day = now.getDay();
+
+            // Market hours: 9:15 AM - 3:30 PM IST, Mon-Fri
+            const isWeekday = day >= 1 && day <= 5;
+            const currentTime = hours * 60 + minutes;
+            const marketOpen = 9 * 60 + 15;  // 9:15 AM
+            const marketClose = 15 * 60 + 30; // 3:30 PM
+
+            const statusEl = document.getElementById('market-status');
+
+            if (isWeekday && currentTime >= marketOpen && currentTime <= marketClose) {
+                statusEl.textContent = 'Market Open';
+                statusEl.className = 'market-status open';
+            } else if (isWeekday && currentTime >= marketOpen - 15 && currentTime < marketOpen) {
+                statusEl.textContent = 'Pre-Market';
+                statusEl.className = 'market-status pre-market';
+            } else {
+                statusEl.textContent = 'Market Closed';
+                statusEl.className = 'market-status closed';
+            }
+        }
+
+        function formatNumber(num) {
+            if (num === undefined || num === null || isNaN(num)) return '--';
+            return num.toLocaleString('en-IN', { maximumFractionDigits: 2 });
+        }
+
+        function formatPercent(num) {
+            if (num === undefined || num === null || isNaN(num)) return '--';
+            return num.toFixed(2) + '%';
+        }
+
+        // Initialize
+        initDashboard();
+    </script>
+</body>
+</html>
