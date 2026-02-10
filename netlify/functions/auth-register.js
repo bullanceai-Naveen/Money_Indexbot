@@ -45,7 +45,7 @@ exports.handler = async (event) => {
         const { data: authData, error: authError } = await supabase.auth.admin.createUser({
             email: validation.sanitized.email,
             password: body.password,
-            email_confirm: true // Auto-confirm for now (can enable email verification later)
+            email_confirm: true
         });
 
         if (authError) {
@@ -55,35 +55,65 @@ exports.handler = async (event) => {
                 return error('An account with this email already exists', 409);
             }
 
-            // Temporary debug info - remove in production
-            return error(`Account creation failed: ${authError.message || JSON.stringify(authError)}`, 500);
+            return error(`Account creation failed: ${authError.message}`, 500);
         }
 
-        // Update profile with additional info
-        const profileUpdate = {
-            updated_at: new Date().toISOString()
-        };
-
-        if (validation.sanitized.full_name) {
-            profileUpdate.full_name = validation.sanitized.full_name;
-        }
-
-        if (validation.sanitized.phone) {
-            profileUpdate.phone = validation.sanitized.phone;
-        }
-
-        await supabase
+        // Manually ensure profile exists (in case the trigger didn't fire)
+        const { data: existingProfile } = await supabase
             .from('profiles')
-            .update(profileUpdate)
-            .eq('id', authData.user.id);
+            .select('id')
+            .eq('id', authData.user.id)
+            .single();
+
+        if (!existingProfile) {
+            // Manually create profile since trigger may not have fired
+            const { error: profileInsertError } = await supabase
+                .from('profiles')
+                .insert({
+                    id: authData.user.id,
+                    email: validation.sanitized.email,
+                    full_name: validation.sanitized.full_name || null,
+                    phone: validation.sanitized.phone || null,
+                    updated_at: new Date().toISOString()
+                });
+
+            if (profileInsertError) {
+                console.error('Profile creation error:', profileInsertError);
+                // User was created in auth but profile failed - still return success
+                // Profile can be created on next login
+            }
+        } else {
+            // Profile exists from trigger, update with additional info
+            const profileUpdate = {
+                updated_at: new Date().toISOString()
+            };
+
+            if (validation.sanitized.full_name) {
+                profileUpdate.full_name = validation.sanitized.full_name;
+            }
+
+            if (validation.sanitized.phone) {
+                profileUpdate.phone = validation.sanitized.phone;
+            }
+
+            await supabase
+                .from('profiles')
+                .update(profileUpdate)
+                .eq('id', authData.user.id);
+        }
 
         // Log activity
-        await supabase.from('user_activity').insert({
-            user_id: authData.user.id,
-            action: 'register',
-            metadata: { method: 'email' },
-            ip_address: event.headers['x-forwarded-for'] || 'unknown'
-        });
+        try {
+            await supabase.from('user_activity').insert({
+                user_id: authData.user.id,
+                action: 'register',
+                metadata: { method: 'email' },
+                ip_address: event.headers['x-forwarded-for'] || 'unknown'
+            });
+        } catch (logErr) {
+            console.error('Activity log error:', logErr);
+            // Non-critical, continue
+        }
 
         return success({
             message: 'Registration successful! Please login to continue.',
@@ -95,6 +125,6 @@ exports.handler = async (event) => {
 
     } catch (err) {
         console.error('Registration error:', err);
-        return serverError(`Registration failed: ${err.message || JSON.stringify(err)}`);
+        return serverError(`Registration failed: ${err.message}`);
     }
 };
